@@ -1,0 +1,4 @@
+wrapper_class: .md
+remove_wrapper: false
+output_directory: build
+file_naming_convention: github-markdown-tailwind.css
