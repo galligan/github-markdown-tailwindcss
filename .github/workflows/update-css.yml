@@ -25,10 +25,15 @@ jobs:
       - name: Fetch latest release information
         id: fetch_release
         run: |
-          latest_release=$(curl -s https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest)
-          echo "::set-output name=tag::$(echo $latest_release | jq -r .tag_name)"
-          echo "::set-output name=css_url::$(echo $latest_release | jq -r .assets[0].browser_download_url)"
-
+          set -e
+          if ! latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
+            echo "Failed to fetch latest release information"
+            exit 1
+          fi
+          tag=$(echo "$latest_release" | jq -r .tag_name)
+          css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "css_url=$css_url" >> $GITHUB_OUTPUT
       - name: Download CSS file
         run: |
           mkdir -p build
@@ -61,29 +66,59 @@ jobs:
           body: "This PR updates the CSS to version ${{ steps.fetch_release.outputs.tag }}."
 
       - name: Wait for pull request to be merged
-        uses: actions/github-script@v3
+        uses: actions/github-script@v7
         with:
           script: |
+            const MAX_WAIT_TIME = 3600000; // 1 hour
+            const START_TIME = Date.now();
+            let prData;
+            
             const pr = await github.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.payload.pull_request.number,
             });
-            while (pr.data.merged_at === null) {
+            
+            while (true) {
+              if (Date.now() - START_TIME > MAX_WAIT_TIME) {
+                throw new Error('Timeout waiting for PR to be merged');
+              }
+              
+              try {
+                prData = await github.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                });
+                
+                if (prData.data.merged_at !== null) {
+                  break;
+                }
+                
+                if (prData.data.state === 'closed' && !prData.data.merged) {
+                  throw new Error('PR was closed without being merged');
+                }
+              } catch (error) {
+                console.error('Error checking PR status:', error);
+                throw error;
+              }
+              
               await new Promise(resolve => setTimeout(resolve, 10000));
-              pr = await github.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-              });
             }
+      - name: Verify CSS file exists
+        run: |
+          if [ ! -f "build/github-markdown-tailwind.css" ]; then
+            echo "CSS file not found"
+            exit 1
+          fi
 
       - name: Create release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.fetch_release.outputs.tag }}
-          release_name: ${{ steps.fetch_release.outputs.tag }}
+          name: ${{ steps.fetch_release.outputs.tag }}
           body: |
             This release updates the CSS to version ${{ steps.fetch_release.outputs.tag }}.
             Refer to the upstream release notes for more details: https://github.com/sindresorhus/github-markdown-css/releases/tag/${{ steps.fetch_release.outputs.tag }}
-          files: build/github-markdown-tailwind.css
+          files: |
+            build/github-markdown-tailwind.css
