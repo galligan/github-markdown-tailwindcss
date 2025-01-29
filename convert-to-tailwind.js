@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const postcss = require('postcss');
-const tailwindcss = require('@tailwindcss/postcss8');
+const tailwindcss = require('tailwindcss');
+const autoprefixer = require('autoprefixer');
 const yaml = require('js-yaml');
 
 // Validate configuration values
@@ -63,22 +64,24 @@ try {
   process.exit(1);
 }
 
-// Process the CSS content with Tailwind CSS JIT mode
+// Process the CSS content with Tailwind CSS
 postcss([
   tailwindcss({
-    mode: 'jit',
-    purge: [cssFilePath],
+    content: [cssFilePath],
     corePlugins: {
       preflight: false,
     },
     theme: {
       extend: {},
     },
-    variants: {},
     plugins: [],
   }),
+  autoprefixer
 ])
-  .process(cssContent, { from: undefined })
+  .process(cssContent, { 
+    from: cssFilePath,
+    to: path.join(outputDirectory, fileNamingConvention)
+  })
   .then((result) => {
     let tailwindCssContent = result.css;
 
@@ -109,5 +112,5 @@ postcss([
     }
   })
   .catch((error) => {
-    console.error('Error processing CSS with Tailwind CSS JIT mode:', error);
+    console.error('Error processing CSS with Tailwind CSS:', error);
   });
