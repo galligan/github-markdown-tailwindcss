@@ -41,7 +41,7 @@ priority: medium
 
 ### 1. Agent-specific Instructions
 
-- Any `.agent` or scratchpad files to be used
+- Any `.agent` or scratchpad files to be used in the task
 - Tools or processes the AI should follow
 
 ### 2. Goals 🎯

@@ -64,7 +64,7 @@
       - Example: "Timestamps must use ISO 8601 format"
     - `[Tool]`: Commands, utilities, and their proper usage
       - Example: "Use `git rebase -i` for squashing commits"
-    - `[Concept]`: Core ideas that guide decision making
+    - `[Concept]`: Core ideas that guide decision-making
       - Example: "Sessions maintain chronological order for clarity"
     - `[Pattern]`: Recurring workflows and best practices
       - Example: "Create checkpoints before major changes"
