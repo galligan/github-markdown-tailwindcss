@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const postcss = require('postcss');
-const tailwindcss = require('tailwindcss');
+const tailwindcss = require('@tailwindcss/postcss');
 const autoprefixer = require('autoprefixer');
 const yaml = require('js-yaml');
 
