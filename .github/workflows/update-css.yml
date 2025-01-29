@@ -51,11 +51,15 @@ jobs:
             if [ $status -eq 0 ] && [ ! -z "$response" ]; then
               if tag=$(echo "$response" | jq -r .tag_name) && [ "$tag" != "null" ]; then
                 echo "Successfully found tag: $tag"
-                if css_url=$(echo "$response" | jq -r '.assets[] | select(.name=="github-markdown.css") | .browser_download_url') && [ "$css_url" != "null" ]; then
-                  echo "Successfully found CSS URL: $css_url"
+                # Get CSS directly from the repository
+                css_url="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/$tag/github-markdown.css"
+                echo "Using CSS URL: $css_url"
+                # Verify the CSS file exists
+                if curl --output /dev/null --silent --head --fail "$css_url"; then
+                  echo "Successfully verified CSS file exists"
                   break
                 else
-                  echo "Failed to find CSS asset in release"
+                  echo "CSS file not found at $css_url"
                 fi
               else
                 echo "Failed to extract tag name"
@@ -76,10 +80,16 @@ jobs:
           
           echo "tag=$tag" >> $GITHUB_OUTPUT
           echo "css_url=$css_url" >> $GITHUB_OUTPUT
+
       - name: Download CSS file
         run: |
           mkdir -p build
+          echo "Downloading CSS from ${{ steps.fetch_release.outputs.css_url }}"
           curl -L ${{ steps.fetch_release.outputs.css_url }} -o build/github-markdown.css
+          if [ ! -s build/github-markdown.css ]; then
+            echo "Error: Downloaded CSS file is empty"
+            exit 1
+          fi
 
       - name: Create new branch
         run: |
