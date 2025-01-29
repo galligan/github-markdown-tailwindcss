@@ -14,6 +14,10 @@ on:
 jobs:
   update-css:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout repository
@@ -27,7 +31,9 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install tailwindcss@latest postcss@latest autoprefixer@latest postcss-js@latest js-yaml@latest
 
       - name: Fetch latest release information
         id: fetch_release
@@ -106,6 +112,8 @@ jobs:
           git commit -m "Update CSS to version ${{ steps.fetch_release.outputs.tag }}"
 
       - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: git push --set-upstream origin update-css-${{ steps.fetch_release.outputs.tag }}
 
       - name: Create pull request
