@@ -1,0 +1,13 @@
+{
+  "name": "github-markdown-tailwindcss",
+  "version": "1.0.0",
+  "description": "Convert GitHub Markdown CSS to TailwindCSS",
+  "main": "convert-to-tailwind.js",
+  "scripts": {
+    "convert": "node convert-to-tailwind.js"
+  },
+  "dependencies": {
+    "postcss": "^8.4.35",
+    "postcss-js": "^4.0.1"
+  }
+} 
