@@ -5,9 +5,10 @@ on:
     types: [github-markdown-css-release]
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'GitHub Markdown CSS version tag to use'
-        required: true
+      ref:
+        description: 'Branch to run workflow from (e.g. dev, main)'
+        required: false
+        default: 'main'
         type: string
 
 jobs:
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,36 +33,22 @@ jobs:
         id: fetch_release
         run: |
           set -e
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ github.event.inputs.tag }}" = "latest" ]; then
-              if ! latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
-                echo "Failed to fetch latest release information"
-                exit 1
-              fi
-              tag=$(echo "$latest_release" | jq -r .tag_name)
-              css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
-            else
-              tag="${{ github.event.inputs.tag }}"
-              css_url="https://github.com/sindresorhus/github-markdown-css/releases/download/$tag/github-markdown.css"
+          max_attempts=3
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
+              break
             fi
-          else
-            max_attempts=3
-            attempt=1
-            while [ $attempt -le $max_attempts ]; do
-              if latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
-                break
-              fi
-              echo "Attempt $attempt failed. Retrying in 5 seconds..."
-              sleep 5
-              attempt=$((attempt + 1))
-            done
-            if [ $attempt -gt $max_attempts ]; then
-              echo "Failed to fetch latest release information after $max_attempts attempts"
-              exit 1
-            fi
-            tag=$(echo "$latest_release" | jq -r .tag_name)
-            css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
+            echo "Attempt $attempt failed. Retrying in 5 seconds..."
+            sleep 5
+            attempt=$((attempt + 1))
+          done
+          if [ $attempt -gt $max_attempts ]; then
+            echo "Failed to fetch latest release information after $max_attempts attempts"
+            exit 1
           fi
+          tag=$(echo "$latest_release" | jq -r .tag_name)
+          css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
           echo "tag=$tag" >> $GITHUB_OUTPUT
           echo "css_url=$css_url" >> $GITHUB_OUTPUT
       - name: Download CSS file
