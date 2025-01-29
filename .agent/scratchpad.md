@@ -68,8 +68,29 @@
       - Example: "Sessions maintain chronological order for clarity"
     - `[Pattern]`: Recurring workflows and best practices
       - Example: "Create checkpoints before major changes"
-    - `[Solution]`: Problem encountered and how it was solved
-      - Example: "When timestamps mismatch: Use `date` command instead of manual entry"
+    - `[Solution]`: Structured problem-solution documentation
+      - Format:
+
+        ```md
+        `[Solution]`
+          - `[Problem]`: <clear problem statement>
+          - `[Impact]`: <business/technical impact>
+          - `[Root Cause]`: <underlying cause>
+          - `[Solution]`: <implemented fix>
+          - `[Prevention]`: <steps to prevent recurrence>
+        ```
+
+      - Example:
+
+        ```md
+        `[Solution]`
+          - `[Problem]`: Timestamp mismatches in logs
+          - `[Impact]`: Incorrect order of events in session history
+          - `[Root Cause]`: Manual entry prone to errors
+          - `[Solution]`: Use `date` command for consistency
+          - `[Prevention]`: Added timestamp generation to usage guide
+        ```
+
   - Use the following format:
   
     ```md

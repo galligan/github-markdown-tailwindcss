@@ -48,6 +48,8 @@ Before taking action, I must:
    - Consider functional impact
    - Never delete without permission
    - Keep backups when needed
+   - Sanitize file paths to prevent path traversal
+   - Avoid executing untrusted code
 
 ## User Commands
 

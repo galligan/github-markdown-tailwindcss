@@ -34,8 +34,18 @@ jobs:
             tag="${{ github.event.inputs.tag }}"
             css_url="https://github.com/sindresorhus/github-markdown-css/releases/download/$tag/github-markdown.css"
           else
-            if ! latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
-              echo "Failed to fetch latest release information"
+            max_attempts=3
+            attempt=1
+            while [ $attempt -le $max_attempts ]; do
+              if latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
+                break
+              fi
+              echo "Attempt $attempt failed. Retrying in 5 seconds..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            if [ $attempt -gt $max_attempts ]; then
+              echo "Failed to fetch latest release information after $max_attempts attempts"
               exit 1
             fi
             tag=$(echo "$latest_release" | jq -r .tag_name)
