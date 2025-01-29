@@ -31,8 +31,17 @@ jobs:
         run: |
           set -e
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ github.event.inputs.tag }}"
-            css_url="https://github.com/sindresorhus/github-markdown-css/releases/download/$tag/github-markdown.css"
+            if [ "${{ github.event.inputs.tag }}" = "latest" ]; then
+              if ! latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
+                echo "Failed to fetch latest release information"
+                exit 1
+              fi
+              tag=$(echo "$latest_release" | jq -r .tag_name)
+              css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
+            else
+              tag="${{ github.event.inputs.tag }}"
+              css_url="https://github.com/sindresorhus/github-markdown-css/releases/download/$tag/github-markdown.css"
+            fi
           else
             max_attempts=3
             attempt=1
