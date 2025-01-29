@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const postcss = require('postcss');
-const tailwindcss = require('tailwindcss');
+const tailwindcss = require('@tailwindcss/postcss8');
 const yaml = require('js-yaml');
 
 // Validate configuration values
