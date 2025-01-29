@@ -10,11 +10,22 @@ jobs:
     steps:
       - name: Check latest release
         run: |
-          latest_release=$(curl -s https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest)
-          latest_tag=$(echo $latest_release | jq -r .tag_name)
-          current_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name || echo "none")
+          if ! response=$(curl -sS -f https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
+            echo "Error: Failed to fetch latest release"
+            exit 1
+          fi
+          latest_tag=$(echo "$response" | jq -r .tag_name)
+          if [ "$latest_tag" = "null" ]; then
+            echo "Error: Failed to extract tag name"
+            exit 1
+          fi
+          if ! current_response=$(curl -sS -f https://api.github.com/repos/${{ github.repository }}/releases/latest); then
+            current_tag="none"
+          else
+            current_tag=$(echo "$current_response" | jq -r .tag_name)
+          fi
           if [ "$latest_tag" != "$current_tag" ]; then
             curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -d '{"event_type":"github-markdown-css-release"}'
+              -d "{\"event_type\":\"github-markdown-css-release\",\"client_payload\":{\"tag_name\":\"$latest_tag\"}}"
