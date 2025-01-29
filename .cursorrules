@@ -1,0 +1,276 @@
+# Operating Rules
+
+I am an AI assistant working in the project directory. I maintain state and context through the `.agent` directory structure.
+
+This project is a GitHub Markdown CSS styles converter that transforms GitHub's markdown styles into TailwindCSS-formatted styles.
+
+## Core Workflow
+
+1. Review project `README.md` to understand context and requirements
+2. Review my [`scratchpad.md`](./.agent/scratchpad.md) for context and active tasks
+3. Plan steps in my `scratchpad` using checkboxes and timestamps
+4. Check [`tasks.md`](./.agent/tasks/tasks.md) for open work
+5. Create task documents in `.agent/tasks/` for larger work
+6. Discuss plans when needed
+7. Execute plans and track progress in `scratchpad`
+8. Move completed tasks to daily logs
+9. Update learnings in `scratchpad`
+10. Mark tasks as completed
+
+## Critical Steps
+
+Before taking action, I must:
+
+1. Follow communication best practices:
+   - Be concise and natural
+   - Use proper markdown
+   - Reference files with backticks
+
+2. Plan in `scratchpad` first:
+   - List steps in future tense
+   - Use nested checklists
+   - Track files to modify
+   - Use checkboxes and timestamps
+
+3. Maintain documentation:
+   - Track changes in `scratchpad`
+   - Move completed work to daily logs
+   - Update changelog
+   - Track learnings with proper tags:
+     - `[Convention]`: Rules and standards
+     - `[Tool]`: Commands and utilities
+     - `[Concept]`: Core ideas
+     - `[Pattern]`: Workflows
+     - `[Solution]`: Problems and resolutions
+
+4. Handle files safely:
+   - Consider security implications
+   - Consider functional impact
+   - Never delete without permission
+   - Keep backups when needed
+
+## User Commands
+
+- `[hi | hey | hello | start]`: Begin new session
+  - Greet user
+  - Read rules
+  - Check scratchpad
+  - Review changelog
+  - Find recent checkpoint
+- `[continue | resume]`: Continue from last checkpoint
+- `[stop | bye | done]`: End session
+  - Move completed tasks to logs
+  - Update changelog
+  - Clean scratchpad
+  - Create final checkpoint
+- `[checkpoint | save]`: Create checkpoint
+  - Add timestamp (use terminal command `date +%H:%M:%S` for checkpoint time)
+  - Add key points
+  - Reference in scratchpad
+
+## Checkpoint Rules
+
+- Checkpoints are line items within sessions within [`scratchpad.md`](./.agent/scratchpad.md)
+- New checkpoints are created:
+  - At the user's request via `checkpoint` command
+  - If the last checkpoint is older than 1 day
+  - Look for the last `[Checkpoint]` line in the current session and compare its timestamp
+- Format: `[Checkpoint] HH:MM:SS: <description>`
+
+## Session Management
+
+- Sessions end automatically:
+  - At the user's request via `stop` command
+  - If the last checkpoint is older than 4 hours
+- When ending a session:
+  - Move completed items to daily logs
+  - Update changelog with summary
+  - Clean up scratchpad
+  - Create final checkpoint
+- Once migrated, older sessions should be removed from history
+
+## Task Management
+
+- Complex tasks are documented in `.agent/tasks/`
+  - Copy [`TXXX-task-template.md`](./.agent/tasks/TXXX-task-template.md) to create new tasks
+  - Follow template instructions to fill in required sections
+  - Tasks start in `open/` directory and move to `closed/` when done
+  - Track tasks in [`tasks.md`](./.agent/tasks/tasks.md) with status updates
+
+- Inbox Workflow:
+  - User drops task instructions in `.agent/tasks/inbox/`
+  - When new file appears in inbox:
+    1. Read and analyze the instructions
+    2. Create appropriate task(s) in `open/` using template
+    3. Update [`tasks.md`](./.agent/tasks/tasks.md) with new task(s)
+    4. Add conversion entry to "Inbox -> Tasks" section. Prefix with a date using the terminal command `date +%Y-%m-%d`:
+
+       ```md
+       - `[YYYY-MM-DD]`: `inbox-template.md` → [T001: Inbox Template Feature](./tasks/open/T001-inbox-template.md)
+       ```
+
+    5. Delete the original file from inbox after successful task creation
+  - Inbox files:
+    - Will be in markdown format
+    - May or may not follow the task template
+
+- Task Creation:
+  - Use template for work that spans multiple sessions
+  - Fill in minimal sections first (Description, Requirements, Definition of Done)
+  - Add extended sections only when complexity warrants
+  - Update frontmatter with correct dates using terminal command `date +%Y-%m-%dT%H:%M:%SZ`
+
+- Task Workflow:
+  - Active work happens in `scratchpad` during sessions
+  - Use checkboxes and nested lists for granular tracking
+  - Update task documents periodically to reflect major progress
+  - Don't slow down workflow with constant task document updates
+  - Move completed tasks to `closed/` directory
+
+- Task States:
+  - `Backlog`: Not started
+  - `In Progress`: Active work
+  - `Done`: Completed
+  - `Not Doing`: Canceled
+  - `Archived`: Moved to `.archive`
+
+- Task IDs:
+  - Format: `TXXX` where X is a digit
+  - Increment sequentially starting from T000
+  - Include ID in all related commits and documentation
+
+- Task Dependencies:
+  - List dependent tasks in task document under "Related" section
+  - Use format: "Depends on: TXXX" or "Required by: TXXX"
+  - Update all related tasks when status changes
+
+- Concurrent Tasks:
+  - Track active tasks in scratchpad with clear separation
+  - Use task ID as prefix for related checkboxes
+  - Update all related tasks when switching context
+
+## Git Workflow
+
+- Commit Messages:
+  - Use descriptive present-tense verbs
+  - Format: `[Cursor] <type>: <description>`
+  - Types:
+    - `feat`: New feature or enhancement
+    - `fix`: Bug fix
+    - `docs`: Documentation changes
+    - `chore`: Maintenance tasks
+    - `refactor`: Code restructuring
+  - For multi-line commits:
+    - First line is a summary (50 chars or less)
+    - Leave one blank line
+    - Add detailed description if needed
+    - Write message to temporary file
+    - Use `git commit -F <file>` to commit
+    - Remove temporary file after commit
+    - Always prefix with "[Cursor] " in commit messages and PR titles
+
+- When to Commit:
+  - After completing a logical unit of work
+  - When finishing a session
+  - Before major changes
+  - After updating task documents
+
+- Commit Process:
+  - Always use `git add .` to stage all changes
+  - Review staged changes with `git status`
+  - Include relevant task IDs in commit message
+  - Reference task documents or scratchpad entries
+
+- Pushing Changes:
+  - Push after each commit unless explicitly batching
+  - Use `git push origin <branch>` to be explicit
+  - Review the push output for any errors
+  - Verify changes are visible in remote repository
+
+## File Structure
+
+.agent/
+├── tasks/
+│   ├── inbox/
+│   ├── open/
+│   ├── closed/
+│   └── [`tasks.md`](./.agent/tasks/tasks.md)
+├── logs/
+│   ├── YYYY-MM-DD.md
+│   └── [`CHANGELOG.md`](./.agent/logs/CHANGELOG.md)
+└── [`scratchpad.md`](./.agent/scratchpad.md)
+
+## Formatting Examples
+
+### Scratchpad Entry
+
+```md
+### $(date +%Y-%m-%dT%H:%M:%S)
+
+- Use action tags to track changes:
+  - `[Checkpoint]` $(date +%H:%M:%S): <description>
+  - `[Plan]` <description>
+  - `[Thought]` <description>
+  - `[Update]` <description>
+  - `[Learning]` <description>
+- Use checkboxes for tasks:
+  - [ ] <task description>
+      - [ ] <pending subtask>
+      - [x] <completed subtask>
+```
+
+### Learning Entry
+
+```md
+- $(date +%Y-%m-%d) [Convention] Rule or standard that should be followed
+- $(date +%Y-%m-%d) [Tool] Command or utility and how to use it
+- $(date +%Y-%m-%d) [Concept] Core idea or principle to remember
+- $(date +%Y-%m-%d) [Pattern] Recurring workflow or best practice
+- $(date +%Y-%m-%d) [Solution] Problem: description | Solution: resolution
+```
+
+### Daily Log Format
+
+```md
+# Changes - $(date +%Y-%m-%d)
+
+## Changelog
+- Added authentication system
+  - New interface
+  - Improved error handling
+  - Files: `src/auth.py`, `tests/auth_test.py`
+
+## Sessions
+- Morning session @10:00 AM
+  - Focus: Authentication
+  - Updates: Interface design, testing
+```
+
+## Path Conventions
+
+- Use relative paths with `./` prefix
+- Never use absolute paths
+- Keep parent directory traversal minimal
+- Use backticks for file references
+
+## File Management
+
+- Conflict Resolution:
+  - Always pull latest changes before editing shared files
+  - Use temporary files for large changes to shared documents
+  - Coordinate through task documentation for shared resource updates
+  - If conflicts occur, preserve both versions and seek user input
+
+## Session Tracking
+
+- Checkpoint Metadata:
+  - Store last checkpoint time in scratchpad header
+  - Format: `Last Checkpoint: YYYY-MM-DD HH:MM:SS`
+  - Update on every checkpoint creation
+  - Use for enforcing timing rules
+
+- Session Cleanup:
+  - Move completed sessions to daily logs after 24 hours
+  - Preserve last 3 checkpoints in scratchpad
+  - Transfer important context to task documents
+  - Archive old sessions in daily logs
