@@ -31,27 +31,37 @@ jobs:
 
       - name: Fetch latest release information
         id: fetch_release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -e
-          max_attempts=5  # Increased from 3 to 5
+          max_attempts=5
           attempt=1
           while [ $attempt -le $max_attempts ]; do
             echo "Attempt $attempt: Fetching latest release information..."
-            response=$(curl -sS https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest)
+            response=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest)
             status=$?
             
+            echo "API Response:"
+            echo "$response" | jq '.' || echo "$response"
+            
             if [ $status -eq 0 ] && [ ! -z "$response" ]; then
-              if echo "$response" | jq -e .tag_name > /dev/null 2>&1; then
-                latest_release="$response"
-                echo "Successfully fetched release information"
-                break
+              if tag=$(echo "$response" | jq -r .tag_name) && [ "$tag" != "null" ]; then
+                echo "Successfully found tag: $tag"
+                if css_url=$(echo "$response" | jq -r '.assets[] | select(.name=="github-markdown.css") | .browser_download_url') && [ "$css_url" != "null" ]; then
+                  echo "Successfully found CSS URL: $css_url"
+                  break
+                else
+                  echo "Failed to find CSS asset in release"
+                fi
               else
-                echo "Invalid response format:"
-                echo "$response" | jq '.'
+                echo "Failed to extract tag name"
               fi
             else
               echo "Curl failed with status $status"
-              echo "Response: $response"
             fi
             
             echo "Attempt $attempt failed. Retrying in 5 seconds..."
@@ -61,16 +71,8 @@ jobs:
           
           if [ $attempt -gt $max_attempts ]; then
             echo "Failed to fetch latest release information after $max_attempts attempts"
-            echo "Last response received:"
-            echo "$response" | jq '.' || echo "$response"
             exit 1
           fi
-          
-          tag=$(echo "$latest_release" | jq -r .tag_name)
-          css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
-          
-          echo "Found release tag: $tag"
-          echo "CSS URL: $css_url"
           
           echo "tag=$tag" >> $GITHUB_OUTPUT
           echo "css_url=$css_url" >> $GITHUB_OUTPUT
