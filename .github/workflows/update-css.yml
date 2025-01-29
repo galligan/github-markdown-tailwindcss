@@ -33,22 +33,45 @@ jobs:
         id: fetch_release
         run: |
           set -e
-          max_attempts=3
+          max_attempts=5  # Increased from 3 to 5
           attempt=1
           while [ $attempt -le $max_attempts ]; do
-            if latest_release=$(curl -sf https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest); then
-              break
+            echo "Attempt $attempt: Fetching latest release information..."
+            response=$(curl -sS https://api.github.com/repos/sindresorhus/github-markdown-css/releases/latest)
+            status=$?
+            
+            if [ $status -eq 0 ] && [ ! -z "$response" ]; then
+              if echo "$response" | jq -e .tag_name > /dev/null 2>&1; then
+                latest_release="$response"
+                echo "Successfully fetched release information"
+                break
+              else
+                echo "Invalid response format:"
+                echo "$response" | jq '.'
+              fi
+            else
+              echo "Curl failed with status $status"
+              echo "Response: $response"
             fi
+            
             echo "Attempt $attempt failed. Retrying in 5 seconds..."
             sleep 5
             attempt=$((attempt + 1))
           done
+          
           if [ $attempt -gt $max_attempts ]; then
             echo "Failed to fetch latest release information after $max_attempts attempts"
+            echo "Last response received:"
+            echo "$response" | jq '.' || echo "$response"
             exit 1
           fi
+          
           tag=$(echo "$latest_release" | jq -r .tag_name)
           css_url=$(echo "$latest_release" | jq -r .assets[0].browser_download_url)
+          
+          echo "Found release tag: $tag"
+          echo "CSS URL: $css_url"
+          
           echo "tag=$tag" >> $GITHUB_OUTPUT
           echo "css_url=$css_url" >> $GITHUB_OUTPUT
       - name: Download CSS file
